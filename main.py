@@ -9,12 +9,12 @@ import time
 from tqdm_loggable.auto import tqdm
 import logging
 
-REQUIRED_CONFIG_ELEMENTS = ["ssh_key", "ssh_host", "ssh_user", "source", "destination"]
+REQUIRED_CONFIG_ELEMENTS = ["ssh_key", "ssh_host", "ssh_user", "source", "destination", "db_path"]
 
 class DataPush(object):
     logging.basicConfig(level=logging.INFO)
     REQUIRED_CONFIG_ELEMENTS = ["ssh_key", "ssh_host", "ssh_user", "source", "destination"]
-    DEFAULTS = {"update_frequency": 60}
+    DEFAULTS = {"update_frequency": 60, "ignore_extensions": []}
 
     def __init__(self, config_path):
         if not os.path.isfile(config_path):
@@ -70,23 +70,37 @@ class DataPush(object):
             with open(temp_dir.name + "/already_uploaded_server.txt") as f:
                 already_uploaded_server = set(f.read().splitlines())
 
-        already_uploaded_client = set()
-        if os.path.isfile("already_uploaded.txt"):
+        already_uploaded_client = set(already_uploaded_server)
+        if os.path.isfile("%s/already_uploaded.txt" % self.config["db_path"]):
             with open("already_uploaded.txt") as f:
-                already_uploaded_client = set(f.read().splitlines())
+                already_uploaded_client = already_uploaded_client.union(set(f.read().splitlines()))
 
         content = []
         for dir_path, _, files in os.walk(self.config["source"]):
-            if len(files) > 0:
-                content.extend([(dir_path[len(self.config["source"]) + 1::] + "/" + file) for file in files])
+            for file in files:
+                ignore_file = False
+                for ext in self.config["ignore_extensions"]:
+                    if file.endswith(ext):
+                        ignore_file = True
+                        break
+                if not ignore_file:
+                    entry = dir_path[len(self.config["source"]) + 1::] + "/" + file
+                    content.append(entry)
 
         for c in content:
-            if c not in already_uploaded_client and c not in already_uploaded_server:
+            if c not in already_uploaded_client:
                 ssh.exec_command('mkdir -p "' + self.config["destination"] + '/' + os.path.dirname(c) + '"')
                 print("Uploading " + c)
                 self.progress_bar = tqdm(total=100)
                 scp.put(self.config["source"] + "/" + c, self.config["destination"] + "/" + c)
                 self.progress_bar.close()
+                already_uploaded_client.add(c)
+
+        with open("%s/already_uploaded.txt" % self.config["db_path"], "w") as f:
+            for entry in already_uploaded_client:
+                f.write(entry + "\n")
+
+        scp.put("%s/already_uploaded.txt" % self.config["db_path"], "%s/.already_uploaded.txt" % self.config["destination"])
 
         scp.close()
         self.last_update = time.time()
