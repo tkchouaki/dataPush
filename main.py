@@ -6,11 +6,13 @@ import os
 import yaml
 import sys
 import time
-from tqdm.auto import tqdm
+from tqdm_loggable.auto import tqdm
+import logging
 
 REQUIRED_CONFIG_ELEMENTS = ["ssh_key", "ssh_host", "ssh_user", "source", "destination"]
 
 class DataPush(object):
+    logging.basicConfig(level=logging.INFO)
     REQUIRED_CONFIG_ELEMENTS = ["ssh_key", "ssh_host", "ssh_user", "source", "destination"]
     DEFAULTS = {"update_frequency": 60}
 
