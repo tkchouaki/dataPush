@@ -1,0 +1,9 @@
+bcrypt @ file:///home/conda/feedstock_root/build_artifacts/bld/rattler-build_bcrypt_1749234472/work
+cffi @ file:///home/conda/feedstock_root/build_artifacts/cffi_1725560556141/work
+cryptography @ file:///home/conda/feedstock_root/build_artifacts/cryptography-split_1751491068086/work
+paramiko @ file:///home/conda/feedstock_root/build_artifacts/paramiko_1738679121080/work
+pycparser @ file:///home/conda/feedstock_root/build_artifacts/bld/rattler-build_pycparser_1733195786/work
+PyNaCl @ file:///home/conda/feedstock_root/build_artifacts/pynacl_1725739266362/work
+PyYAML @ file:///home/conda/feedstock_root/build_artifacts/pyyaml_1737454647378/work
+scp @ file:///home/conda/feedstock_root/build_artifacts/scp_1734956502499/work
+six @ file:///home/conda/feedstock_root/build_artifacts/six_1733380938961/work
