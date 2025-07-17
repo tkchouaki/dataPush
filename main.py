@@ -6,7 +6,7 @@ import os
 import yaml
 import sys
 import time
-from tqdm import tqdm
+from tqdm.auto import tqdm
 
 REQUIRED_CONFIG_ELEMENTS = ["ssh_key", "ssh_host", "ssh_user", "source", "destination"]
 
@@ -82,7 +82,7 @@ class DataPush(object):
             if c not in already_uploaded_client and c not in already_uploaded_server:
                 ssh.exec_command('mkdir -p "' + self.config["destination"] + '/' + os.path.dirname(c) + '"')
                 print("Uploading " + c)
-                self.progress_bar = tqdm(total=100, position=0, leave=True)
+                self.progress_bar = tqdm(total=100)
                 scp.put(self.config["source"] + "/" + c, self.config["destination"] + "/" + c)
                 self.progress_bar.close()
 
