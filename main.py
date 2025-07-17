@@ -50,7 +50,12 @@ class DataPush(object):
         destination_content = out.readlines()
 
         print("Establishing SCP connection")
-        scp = SCPClient(ssh.get_transport())
+
+        def progress4(filename, size, sent, peername):
+            sys.stdout.write("(%s:%s) %s's progress: %.2f%%   \r" % (peername[0], peername[1], filename,
+                                                                     float(sent) / float(size) * 100))
+
+        scp = SCPClient(ssh.get_transport(), progress4=progress4)
 
         temp_dir = tempfile.TemporaryDirectory(prefix="temp_sync", dir="./")
         already_uploaded_server = set()
