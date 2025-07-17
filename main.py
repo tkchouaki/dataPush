@@ -26,22 +26,24 @@ if __name__ == "__main__":
 
     ssh = SSHClient()
     ssh.load_system_host_keys()
+    print("Setting missing host key policy")
     ssh.set_missing_host_key_policy(AutoAddPolicy())
     print("Attempting to connect to %s with %s as user and %s as key" % (config["ssh_host"], config["ssh_user"], config["ssh_key"]))
     ssh.connect(config["ssh_host"], username=config["ssh_user"], key_filename=config["ssh_key"])
+    print("Connected successfully")
     ssh.exec_command("mkdir -p " + config["destination"])
 
-    scp = SCPClient(ssh.get_transport())
-
+    print("Looking for .already_uploaded.txt in destination directory")
     _, out, _ = ssh.exec_command("ls -a" + config["destination"])
-
     destination_content = out.readlines()
 
+    print("Establishing SCP connection")
+    scp = SCPClient(ssh.get_transport())
+
     temp_dir = tempfile.TemporaryDirectory(prefix="temp_sync", dir="./")
-
     already_uploaded_server = set()
-
     if ".already_uploaded.txt" in destination_content:
+        print("Found .alread_uploaded.txt in destination directory")
         scp.get(config["destination"] + ".already_uploaded.txt", temp_dir.name + "/already_uploaded_server.txt")
         with open(temp_dir.name + "/already_uploaded_server.txt") as f:
             already_uploaded_server = set(f.read().splitlines())
