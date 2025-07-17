@@ -1,4 +1,5 @@
 from paramiko import SSHClient
+from paramiko.client import AutoAddPolicy
 from scp import SCPClient
 import tempfile
 import os
@@ -25,6 +26,7 @@ if __name__ == "__main__":
 
     ssh = SSHClient()
     ssh.load_system_host_keys()
+    ssh.set_missing_host_key_policy(AutoAddPolicy())
     print("Attempting to connect to %s with %s as user and %s as key" % (config["ssh_host"], config["ssh_user"], config["ssh_key"]))
     ssh.connect(config["ssh_host"], username=config["ssh_user"], key_filename=config["ssh_key"])
     ssh.exec_command("mkdir -p " + config["destination"])
