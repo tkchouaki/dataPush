@@ -55,7 +55,7 @@ class DataPush(object):
     def get_already_uploaded_client(self):
         already_uploaded_client = set()
         if os.path.isfile("%s/already_uploaded.txt" % self.config["db_path"]):
-            with open("already_uploaded.txt") as f:
+            with open("%s/already_uploaded.txt" % self.config["db_path"]) as f:
                 already_uploaded_client = already_uploaded_client.union(set(f.read().splitlines()))
         return already_uploaded_client
 
