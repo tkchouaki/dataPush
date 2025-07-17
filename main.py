@@ -9,9 +9,11 @@ import sys
 REQUIRED_CONFIG_ELEMENTS = ["ssh_key", "ssh_host", "ssh_user", "source", "destination"]
 
 if __name__ == "__main__":
+    print("Starting process")
     if len(sys.argv) != 2:
         raise Exception("Exactly one command line argument is expected")
 
+    print("Reading configuration file from %s" % sys.argv[1])
     with open(sys.argv[1], "r") as f:
         config = yaml.load(f, Loader=yaml.FullLoader)
 
