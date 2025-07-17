@@ -77,13 +77,13 @@ class DataPush(object):
                 scp.put(self.config["source"] + "/" + c, self.config["destination"] + "/" + c)
 
         scp.close()
-        self._last_update = time.time()
+        self.last_update = time.time()
 
 
     def update_loop(self):
         while True:
             curr_time = time.time()
-            if curr_time - self._last_update > self.config["update_frequency"] * 60:
+            if self.last_update is None or curr_time - self.last_update > self.config["update_frequency"] * 60:
                 self.update()
             time.sleep(60)
 
