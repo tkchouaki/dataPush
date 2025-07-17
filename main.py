@@ -82,7 +82,7 @@ class DataPush(object):
             if c not in already_uploaded_client and c not in already_uploaded_server:
                 ssh.exec_command('mkdir -p "' + self.config["destination"] + '/' + os.path.dirname(c) + '"')
                 print("Uploading " + c)
-                self.progress_bar = tqdm(total=100)
+                self.progress_bar = tqdm(total=100, position=0, leave=True)
                 scp.put(self.config["source"] + "/" + c, self.config["destination"] + "/" + c)
                 self.progress_bar.close()
 
