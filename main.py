@@ -37,6 +37,37 @@ class DataPush(object):
         self.last_update = None
         self.progress_bar = None
 
+    def get_already_uploaded_server(self, ssh, scp):
+        print("Looking for .already_uploaded.txt in destination directory")
+        _, out, _ = ssh.exec_command("ls -a" + self.config["destination"])
+        destination_content = out.readlines()
+
+        temp_dir = tempfile.TemporaryDirectory(prefix="temp_sync", dir="./")
+        already_uploaded_server = set()
+        if ".already_uploaded.txt" in destination_content:
+            print("Found .already_uploaded.txt in destination directory")
+            scp.get(self.config["destination"] + ".already_uploaded.txt",
+                    temp_dir.name + "/already_uploaded_server.txt")
+            with open(temp_dir.name + "/already_uploaded_server.txt") as f:
+                already_uploaded_server = set(f.read().splitlines())
+        return already_uploaded_server
+
+    def get_already_uploaded_client(self):
+        already_uploaded_client = set()
+        if os.path.isfile("%s/already_uploaded.txt" % self.config["db_path"]):
+            with open("already_uploaded.txt") as f:
+                already_uploaded_client = already_uploaded_client.union(set(f.read().splitlines()))
+        return already_uploaded_client
+
+    def update_already_uploaded_client(self, already_uploaded_client):
+        with open("%s/already_uploaded.txt" % self.config["db_path"], "w") as f:
+            for entry in already_uploaded_client:
+                f.write(entry + "\n")
+
+    def update_already_uploaded_server(self, scp):
+        scp.put("%s/already_uploaded.txt" % self.config["db_path"],
+                "%s/.already_uploaded.txt" % self.config["destination"])
+
 
     def update(self):
         ssh = SSHClient()
@@ -49,9 +80,6 @@ class DataPush(object):
         print("Connected successfully")
         ssh.exec_command("mkdir -p " + self.config["destination"])
 
-        print("Looking for .already_uploaded.txt in destination directory")
-        _, out, _ = ssh.exec_command("ls -a" + self.config["destination"])
-        destination_content = out.readlines()
 
         print("Establishing SCP connection")
 
@@ -62,18 +90,7 @@ class DataPush(object):
 
         scp = SCPClient(ssh.get_transport(), progress4=progress4)
 
-        temp_dir = tempfile.TemporaryDirectory(prefix="temp_sync", dir="./")
-        already_uploaded_server = set()
-        if ".already_uploaded.txt" in destination_content:
-            print("Found .alread_uploaded.txt in destination directory")
-            scp.get(self.config["destination"] + ".already_uploaded.txt", temp_dir.name + "/already_uploaded_server.txt")
-            with open(temp_dir.name + "/already_uploaded_server.txt") as f:
-                already_uploaded_server = set(f.read().splitlines())
-
-        already_uploaded_client = set(already_uploaded_server)
-        if os.path.isfile("%s/already_uploaded.txt" % self.config["db_path"]):
-            with open("already_uploaded.txt") as f:
-                already_uploaded_client = already_uploaded_client.union(set(f.read().splitlines()))
+        already_uploaded_client = set(self.get_already_uploaded_server(ssh, scp)).union(self.get_already_uploaded_client())
 
         content = []
         for dir_path, _, files in os.walk(self.config["source"]):
@@ -95,12 +112,9 @@ class DataPush(object):
                 scp.put(self.config["source"] + "/" + c, self.config["destination"] + "/" + c)
                 self.progress_bar.close()
                 already_uploaded_client.add(c)
+                self.update_already_uploaded_client(already_uploaded_client)
+                self.update_already_uploaded_server(scp)
 
-        with open("%s/already_uploaded.txt" % self.config["db_path"], "w") as f:
-            for entry in already_uploaded_client:
-                f.write(entry + "\n")
-
-        scp.put("%s/already_uploaded.txt" % self.config["db_path"], "%s/.already_uploaded.txt" % self.config["destination"])
 
         scp.close()
         self.last_update = time.time()
