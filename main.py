@@ -6,6 +6,7 @@ import os
 import yaml
 import sys
 import time
+from tqdm import tqdm
 
 REQUIRED_CONFIG_ELEMENTS = ["ssh_key", "ssh_host", "ssh_user", "source", "destination"]
 
@@ -32,6 +33,7 @@ class DataPush(object):
             if element not in self.config:
                 self.config[element] = DataPush.DEFAULTS[element]
         self.last_update = None
+        self.progress_bar = None
 
 
     def update(self):
@@ -52,8 +54,9 @@ class DataPush(object):
         print("Establishing SCP connection")
 
         def progress4(filename, size, sent, peername):
-            sys.stdout.write("(%s:%s) %s's progress: %.2f%%   \r" % (peername[0], peername[1], filename,
-                                                                     float(sent) / float(size) * 100))
+            progress = float(sent) / float(size) * 100
+            self.progress_bar.n = int(progress)
+            self.progress_bar.refresh()
 
         scp = SCPClient(ssh.get_transport(), progress4=progress4)
 
@@ -79,7 +82,9 @@ class DataPush(object):
             if c not in already_uploaded_client and c not in already_uploaded_server:
                 ssh.exec_command('mkdir -p "' + self.config["destination"] + '/' + os.path.dirname(c) + '"')
                 print("Uploading " + c)
+                self.progress_bar = tqdm(total=100)
                 scp.put(self.config["source"] + "/" + c, self.config["destination"] + "/" + c)
+                self.progress_bar.close()
 
         scp.close()
         self.last_update = time.time()
