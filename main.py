@@ -104,6 +104,8 @@ class DataPush(object):
                     entry = dir_path[len(self.config["source"]) + 1::] + "/" + file
                     content.append(entry)
 
+        nb_uploaded = 0
+
         for c in content:
             if c not in already_uploaded_client:
                 ssh.exec_command('mkdir -p "' + self.config["destination"] + '/' + os.path.dirname(c) + '"')
@@ -114,6 +116,9 @@ class DataPush(object):
                 already_uploaded_client.add(c)
                 self.update_already_uploaded_client(already_uploaded_client)
                 self.update_already_uploaded_server(scp)
+                nb_uploaded += 1
+
+        print("Uploaded %d files" % nb_uploaded)
 
 
         scp.close()
@@ -125,6 +130,7 @@ class DataPush(object):
             curr_time = time.time()
             if self.last_update is None or curr_time - self.last_update > self.config["update_frequency"] * 60:
                 self.update()
+                print("Finished Update, will check again in %d minutes" % self.config["update_frequency"])
             time.sleep(60)
 
 
