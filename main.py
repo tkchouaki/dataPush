@@ -132,7 +132,8 @@ class DataPush(object):
                 try:
                     self.update()
                     print("Finished Update, will check again in %d minutes" % self.config["update_frequency"])
-                except Exception:
+                except Exception as e:
+                    print(e)
                     print("Encountered problem, will retry in one minute")
             time.sleep(60)
 
