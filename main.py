@@ -129,8 +129,11 @@ class DataPush(object):
         while True:
             curr_time = time.time()
             if self.last_update is None or curr_time - self.last_update > self.config["update_frequency"] * 60:
-                self.update()
-                print("Finished Update, will check again in %d minutes" % self.config["update_frequency"])
+                try:
+                    self.update()
+                    print("Finished Update, will check again in %d minutes" % self.config["update_frequency"])
+                except Exception:
+                    print("Encountered problem, will retry in one minute")
             time.sleep(60)
 
 
